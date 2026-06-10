@@ -26,17 +26,16 @@ protocol or into the `trust-annotations` wire surface.
 
 ## Why a profile
 
-An earlier sketch proposed information-flow control as a top-level extension
-(`io.modelcontextprotocol/ifc`). That was the wrong cut. IFC is **one**
-enforcement model among several that reviewers of SEP-1913 raised — capability
-tokens, caller/tool cosigning, and sequence-shape audit records were all put
-forward. Making the FIDES integrity × confidentiality lattice the namespace
-root would silently foreclose those.
+Information-flow control is one enforcement model among several that reviewers
+of SEP-1913 raised — capability tokens, caller/tool cosigning, and
+sequence-shape audit records were all put forward. A top-level extension
+(`io.modelcontextprotocol/ifc`) would make the FIDES integrity × confidentiality
+lattice the namespace root and silently foreclose those other models.
 
-Carrying it as a `type` value under the open-ended `evidenceRef` slot keeps the
-FIDES work first-class while leaving the slot free for every other model. One
-reviewer's framing captured it: IFC "fits relatively well *if you use
-annotations*" — an endorsement of IFC as a profile, not as the wire root.
+As a `type` value under the open-ended `evidenceRef` slot, the FIDES label is
+first-class while the slot stays free for every other model. One reviewer's
+framing captured it: IFC "fits relatively well *if you use annotations*" — an
+endorsement of IFC as a profile, not as the wire root.
 
 ## Motivation
 

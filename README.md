@@ -38,41 +38,41 @@ See [docs/decisions.md](docs/decisions.md) for the decision record and
 
 | Identifier | Status | What it specifies | Reference implementation(s) |
 | :--- | :--- | :--- | :--- |
-| [`io.modelcontextprotocol/trust-annotations`](specification/draft/trust-annotations.mdx) | Draft skeleton | **Headline.** A small, scheme-agnostic client-facing data-classification vocabulary (`sensitive`, `untrusted`) on result `_meta`, plus an optional `evidenceRef` pointer slot that carries richer payloads out-of-band. | Python SDK: [`kapil8811/mcp-trust-annotations`](https://github.com/kapil8811/mcp-trust-annotations) (138-test suite, healthcare demo, LLM usability study). |
+| [`io.modelcontextprotocol/trust-annotations`](specification/draft/trust-annotations.mdx) | Draft skeleton | **Primary extension.** A small, scheme-agnostic client-facing data-classification vocabulary (`sensitive`, `untrusted`) on result `_meta`, plus an optional `evidenceRef` pointer slot that carries richer payloads out-of-band. | Python SDK: [`kapil8811/mcp-trust-annotations`](https://github.com/kapil8811/mcp-trust-annotations) (138-test suite, healthcare demo, LLM usability study). |
 | [`io.modelcontextprotocol/action-metadata`](specification/draft/action-metadata.mdx) | Draft skeleton | `inputMetadata` / `returnMetadata` / outcome classifiers (incl. `requires_review`) on `ToolAnnotations`, describing where inputs go, where outputs originate, and what real-world effects a tool can cause. | Carries forward [SEP-2061 (Action Security Metadata)](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2061) by [@rreichel3](https://github.com/rreichel3); reference impl per that proposal (`read_drafts` / `list_inbox` / `send_email`). |
 | [`io.modelcontextprotocol/ifc-fides`](specification/draft/ifc-fides.mdx) | Draft skeleton | A **profile** of the `trust-annotations` `evidenceRef` slot: `type: "ifc.fides.v1"` carrying an integrity + confidentiality label for deterministic information-flow control, following the FIDES paper ([arXiv:2505.23643](https://arxiv.org/abs/2505.23643)). | Emitter candidate: [`github-mcp-server`](https://github.com/github/github-mcp-server) (does not emit IFC labels today — closing that gap is the proof point). |
 
-### Why FIDES is a profile, not the headline
+### Why FIDES is a profile, not a top-level extension
 
-An earlier sketch made information-flow control the top-level extension. That
-was the wrong cut: it bakes one academic model (an integrity × confidentiality
-lattice) into the namespace root and silently forecloses the other enforcement
-models reviewers raised — capability tokens, caller/tool cosigning, and
-sequence-shape audit records. As one reviewer put it, IFC "fits relatively well
-if you use annotations" — an endorsement of IFC *as a profile*, not as the wire
-root. Demoting it to a `type` value under `trust-annotations`'s open-ended
-`evidenceRef` slot keeps the FIDES work first-class while leaving room for every
-other model to occupy the same slot.
+Information-flow control is modelled as a profile rather than the namespace
+root because IFC (an integrity × confidentiality lattice) is one enforcement
+model among several that reviewers raised — capability tokens, caller/tool
+cosigning, and sequence-shape audit records. A top-level `ifc/` root would bake
+one academic model into the namespace and foreclose the others. As one reviewer
+put it, IFC "fits relatively well if you use annotations" — an endorsement of
+IFC *as a profile*, not as the wire root. As a `type` value under
+`trust-annotations`'s open-ended `evidenceRef` slot, the FIDES work stays
+first-class while every other model can occupy the same slot.
 
 ## Relationship to SEP-1913
 
 SEP-1913 remains the canonical place to discuss the overall problem framing.
-This repo carves the schema-bearing parts of that proposal into independently
-shippable pieces. When an extension here is ready to graduate, an Extensions
-Track SEP can reference this repo as the prior art and the working
+This repository develops the schema-bearing parts of that proposal as
+independently shippable extensions. When an extension here is ready to graduate,
+an Extensions Track SEP can reference this repo as the prior art and the working
 implementation that SEP-2133 [requires](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/seps/2133-extensions.md#creation).
 
 For the full per-SEP plan — what happens to SEP-1913, SEP-2061, SEP-1862 and
 others, and the SEP-2127 refactor precedent — see
 [docs/sep-disposition.md](docs/sep-disposition.md).
 
-**Deliberately not carved here** (see [docs/open-questions.md](docs/open-questions.md)):
+**Out of scope for these extensions** (see [docs/open-questions.md](docs/open-questions.md)):
 
 - **`maliciousActivityHint`** — reviewer concerns are structural (it fires at
   `tools/resolve` before execution can produce evidence; a boolean is the wrong
   granularity for client UX; clients won't trust server self-attestation). If it
-  returns, it is per-`ContentBlock` with spans, on a different clock. Parked on
-  the SEP-1913 umbrella as a known cut item.
+  returns, it is per-`ContentBlock` with spans, on a different clock. It stays
+  on the SEP-1913 umbrella rather than in an extension here.
 - **Propagation rules** — sensitivity escalation across session boundaries, and
   the sequence-shape gap (an annotation surface for "this was call N in a
   flagged sequence") remain open. Likely a future extension once the taxonomy

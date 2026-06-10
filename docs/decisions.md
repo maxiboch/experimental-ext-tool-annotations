@@ -3,7 +3,7 @@
 Append-only record of design decisions for the Tool Annotations IG's trust /
 privacy extension work. Newest at the bottom.
 
-## 2026-06-10 — Carve SEP-1913 into independent extensions
+## 2026-06-10 — Split SEP-1913 into independent extensions
 
 **Decision.** Split the schema-bearing parts of SEP-1913 into separate
 experimental extensions, each with its own `io.modelcontextprotocol/…`
@@ -17,13 +17,13 @@ clock and avoid hard-to-remove schema.
 
 ## 2026-06-10 — Three initial extensions
 
-**Decision.** `trust-annotations` (headline), `action-metadata`, `ifc-fides`.
+**Decision.** `trust-annotations` (primary), `action-metadata`, `ifc-fides`.
 
 **Rationale.** These are the three pieces with either a reference implementation
 or an existing SEP behind them: Kapil's SDK, SEP-2061 (Reichel), and the FIDES
 model respectively.
 
-## 2026-06-10 — FIDES is a profile, not the headline
+## 2026-06-10 — FIDES is a profile, not a top-level extension
 
 **Decision.** Information-flow control is `type: "ifc.fides.v1"`, a profile of
 the `trust-annotations` `evidenceRef` slot — not a top-level `io.modelcontextprotocol/ifc`
@@ -65,7 +65,7 @@ change.
 
 ## 2026-06-10 — Parked: maliciousActivityHint, propagation rules
 
-**Decision.** Neither is carved into an extension now; both stay on the SEP-1913
+**Decision.** Neither becomes an extension now; both stay on the SEP-1913
 umbrella.
 
 **Rationale.** `maliciousActivityHint` has unresolved structural objections

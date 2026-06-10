@@ -5,7 +5,7 @@ annotation work. Several were surfaced in IG meetings (notably 2026-05-28).
 
 ## SEPs
 
-- [SEP-1913 — Trust and Sensitivity Annotations](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913) — the umbrella this work carves from.
+- [SEP-1913 — Trust and Sensitivity Annotations](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913) — the umbrella proposal these extensions derive from.
 - [SEP-2061 — Action Security Metadata](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2061) — carried forward as `action-metadata`.
 - [SEP-1862 — Tool Resolution / pre-flight checks](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1862) — core-protocol, composes with these extensions.
 - [SEP-2133 — Extensions](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/seps/2133-extensions.md) — the framework this repo incubates under.

@@ -20,9 +20,10 @@ related:
 This extension defines a small, stable, scheme-agnostic vocabulary for
 classifying **data in transit** through MCP tool results, plus an optional
 `evidenceRef` pointer that lets a deployment attach richer, out-of-band
-evidence without growing the on-wire schema. It is the headline extension of
-the Tool Annotations IG's trust work; other extensions (information-flow
-control, action metadata) compose with it rather than duplicating it.
+evidence without growing the on-wire schema. It is the primary
+data-classification extension in the Tool Annotations IG's trust work; other
+extensions (information-flow control, action metadata) compose with it rather
+than duplicating it.
 
 The design follows the [@localden](https://github.com/localden) review steer on
 SEP-1913 — take a *narrow first cut* of the taxonomy and avoid hard-to-remove

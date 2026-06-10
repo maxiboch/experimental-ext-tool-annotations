@@ -36,7 +36,7 @@ Tracked here rather than in the spec drafts, so the drafts stay non-temporal.
 - GitHub Enterprise `internal` repo visibility → public/private/reader-set
   mapping (audience is the whole org, broader than collaborators).
 
-## Parked (SEP-1913 umbrella, not carved)
+## Parked (SEP-1913 umbrella)
 
 - **`maliciousActivityHint`** — if it returns, it is per-`ContentBlock` with
   spans, driven by the host's own detection, not a server-attested boolean.

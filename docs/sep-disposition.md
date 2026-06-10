@@ -25,7 +25,7 @@ form. Two inputs since then point at a different shape:
    adoption/evidence base, and only then ask core maintainers to absorb
    anything into the protocol.
 
-The result: carve the schema-bearing parts into small, independent extensions,
+The result: split the schema-bearing parts into small, independent extensions,
 each able to graduate on its own clock.
 
 ## The precedent: SEP-2127 (Server Cards)
@@ -50,7 +50,7 @@ We apply the same playbook below.
 ### SEP-1913 — Trust and Sensitivity Annotations
 
 **Proposed:** becomes the **umbrella / problem-framing** thread. The schema-
-bearing content is carved out into the extensions below. Options, in order of
+bearing content moves into the extensions below. Options, in order of
 preference:
 
 - **(A, preferred)** Keep the PR open as the framing umbrella; add an intent
@@ -62,8 +62,8 @@ preference:
 - **(C)** Close 1913 outright and open three fresh Extensions Track SEPs. Loses
   the discussion history's continuity; not preferred.
 
-**Carved out:** `trust-annotations`, `action-metadata`, `ifc-fides`.
-**Parked on the umbrella (not carved):** `maliciousActivityHint`,
+**Moved into extensions:** `trust-annotations`, `action-metadata`, `ifc-fides`.
+**Parked on the umbrella:** `maliciousActivityHint`,
 session-level propagation rules. See [open-questions.md](./open-questions.md).
 
 ### SEP-2061 — Action Security Metadata
@@ -73,7 +73,7 @@ extension. SEP-2061 is by [@rreichel3](https://github.com/rreichel3), who is
 also an IG co-facilitator and SEP-1913 co-author, so this is a fold-in, not a
 collision. Disposition mirrors 1913 option (A): keep the thread as the field-
 semantics discussion, add a pointer comment linking it to the
-`action-metadata` carve, refactor to Extensions Track when ready.
+`action-metadata` extension, refactor to Extensions Track when ready.
 
 ### SEP-1862 — Tool Resolution (pre-flight checks)
 
@@ -86,8 +86,8 @@ with it if it lands, but do not block on it.
 ### Other related SEPs (not owned here)
 
 - **SEP-1984 (Comprehensive Tool Annotations)**, **SEP-2417 (Model Preferences
-  for Tools)** — tracked by the IG as discussion items; not part of this carve.
-  Cross-link only.
+  for Tools)** — tracked by the IG as discussion items; not part of these
+  extensions. Cross-link only.
 - **SEP-2787 (Tool Call Attestation)** and the various attestation/evidence
   threads — these are natural `evidenceRef` *profile* candidates rather than
   competitors. Coordinate so the `evidenceRef.type` registry can list them.
@@ -96,7 +96,7 @@ with it if it lands, but do not block on it.
 
 | SEP | Title | Proposed disposition | Extension home |
 | :-- | :-- | :-- | :-- |
-| 1913 | Trust & Sensitivity Annotations | Umbrella thread; carve schema out | `trust-annotations` (+ `ifc-fides`) |
+| 1913 | Trust & Sensitivity Annotations | Umbrella thread; schema moves to extensions | `trust-annotations` (+ `ifc-fides`) |
 | 2061 | Action Security Metadata | Fold into extension | `action-metadata` |
 | 1862 | Tool Resolution (pre-flight) | Stays core / Standards Track | — (composes, no dependency) |
 | 1984 | Comprehensive Tool Annotations | IG discussion item | — |
