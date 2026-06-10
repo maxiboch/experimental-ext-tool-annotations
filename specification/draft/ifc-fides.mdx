@@ -1,0 +1,132 @@
+---
+title: Information-Flow Control (FIDES profile)
+extension_identifier: io.modelcontextprotocol/ifc-fides
+status: Draft (experimental)
+maintainers:
+  - "@SamMorrowDrums"
+profile_of: io.modelcontextprotocol/trust-annotations
+related:
+  - https://arxiv.org/abs/2505.23643
+  - https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913
+---
+
+> ⚠️ **Experimental draft skeleton.** This defines a *profile* of the
+> [`trust-annotations`](./trust-annotations.mdx) `evidenceRef` slot. It is **not**
+> a standalone wire root — see [Why a profile](#why-a-profile).
+
+## Abstract
+
+This extension defines `ifc.fides.v1`, a profile of the `trust-annotations`
+`evidenceRef` slot that carries an **information-flow-control label** —
+integrity plus confidentiality — following the FIDES model
+([arXiv:2505.23643](https://arxiv.org/abs/2505.23643)). A host that implements
+deterministic information-flow control can consume these labels to decide
+whether a tool call is permitted, without baking the IFC model into the core
+protocol or into the `trust-annotations` wire surface.
+
+## Why a profile
+
+An earlier sketch proposed information-flow control as a top-level extension
+(`io.modelcontextprotocol/ifc`). That was the wrong cut. IFC is **one**
+enforcement model among several that reviewers of SEP-1913 raised — capability
+tokens, caller/tool cosigning, and sequence-shape audit records were all put
+forward. Making the FIDES integrity × confidentiality lattice the namespace
+root would silently foreclose those.
+
+Carrying it as a `type` value under the open-ended `evidenceRef` slot keeps the
+FIDES work first-class while leaving the slot free for every other model. One
+reviewer's framing captured it: IFC "fits relatively well *if you use
+annotations*" — an endorsement of IFC as a profile, not as the wire root.
+
+## Motivation
+
+The motivating case is the one raised in the
+[2026-05-28 IG meeting](https://github.com/modelcontextprotocol/modelcontextprotocol/discussions/2820):
+**a model often cannot tell whether a repository is public or private**, and
+lacking that signal it may push private content to a public destination. An IFC
+label lets the host track confidentiality (who may read this data) and
+integrity (is this data trusted) as context accumulates across tool calls, and
+deny or prompt before a flow violates policy.
+
+A public MCP server is the natural emitter. [`github-mcp-server`](https://github.com/github/github-mcp-server)
+returns repository data whose confidentiality is determined by repo visibility
+and collaborator sets — exactly the public/private signal above — but does
+**not** emit IFC labels today. Closing that emitter gap is the concrete proof
+point for this profile: a host-side consumer of the label shape already exists,
+so the missing half is a server willing to emit it.
+
+## Specification
+
+### Profile identity
+
+This profile is selected by `evidenceRef.type == "ifc.fides.v1"` on a
+`trust-annotations` annotation. A client that does not implement IFC MUST be
+able to ignore it safely (the surrounding `sensitive` / `untrusted` booleans and
+the `digest`/`canonicalization` pair remain meaningful).
+
+### Label payload
+
+The record referenced by the `evidenceRef` (and, for low-friction adoption, MAY
+be inlined by deployments that accept the wire cost) has the shape:
+
+```jsonc
+{
+  "integrity": "trusted",            // "trusted" | "untrusted"  (FIDES §4.1 two-level lattice)
+  "confidentiality": "public"        // "public" | "private" | ["login1","login2", …]
+}
+```
+
+| Field | Meaning |
+| :--- | :--- |
+| `integrity` | Two-level integrity lattice (`trusted` ⊑ `untrusted`): trusted data may flow to untrusted sinks, not vice versa. |
+| `confidentiality` | `"public"` = world-readable; `"private"` = an opaque marker the host resolves to a reader set (e.g. repo collaborators); an explicit `string[]` = pre-resolved reader logins. Fewer readers = more confidential = higher in the lattice. |
+
+### Label semantics
+
+- **Join on accumulation.** As a session ingests labeled results, the context
+  label is the *join* of what it has seen: integrity degrades toward
+  `untrusted`, confidentiality narrows toward the smallest reader set.
+- **Policy check before egress.** Before a write/egress tool call, the host
+  checks whether the current context label may flow to the call's target. When
+  a label is absent, the host falls back to its default (trusted-action)
+  policy rather than assuming the worst — labels are an *additive* signal.
+- **Confidentiality resolution.** `"private"` is intentionally opaque on the
+  wire; resolving it to a concrete reader set (e.g. via a collaborators lookup)
+  is a host concern, so servers need not enumerate audiences inline.
+
+> The normative integrity/confidentiality lattice definitions follow the FIDES
+> paper, §4.1 and §4.3. This draft references the model rather than restating
+> the proofs.
+
+### Relationship to `trust-annotations`
+
+`ifc-fides` never appears without a host `trust-annotations` annotation
+carrying the `evidenceRef`. The booleans are the universally-actionable signal;
+the IFC label is the precise, host-checkable evidence behind them.
+
+## Reference implementation
+
+- **Consumer:** a host-side IFC engine that parses the `{integrity,
+  confidentiality}` label, maintains a context label across tool results, and
+  applies a flow policy before egress operations already exists in practice.
+  (Linked once a public reference is available.)
+- **Emitter (gap / proof point):** [`github-mcp-server`](https://github.com/github/github-mcp-server)
+  is the candidate — it already knows repo visibility and collaborator sets,
+  which are exactly the confidentiality inputs.
+
+## Open questions
+
+- Should the label be inlinable on `_meta.ifc` directly for low-friction
+  adoption, or always behind `evidenceRef` for schema minimalism? (Lean:
+  permit both; `evidenceRef` is canonical, inline is a convenience.)
+- How does GitHub Enterprise `internal` repo visibility map onto the
+  public/private/reader-set confidentiality model? (Audience is the whole org,
+  strictly broader than collaborators — likely falls back to default policy.)
+- Registry coordination with other attestation/evidence profiles
+  (e.g. SEP-2787) so `evidenceRef.type` values don't collide.
+
+## Changelog
+
+| Date       | Change                                                       |
+| ---------- | ------------------------------------------------------------ |
+| 2026-06-10 | Initial draft skeleton. Reframed from a top-level `ifc` extension to a `trust-annotations` `evidenceRef` profile (`ifc.fides.v1`). |
