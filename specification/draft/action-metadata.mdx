@@ -10,8 +10,9 @@ title: Action Metadata
 > [SEP-2061: Action Security Metadata](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2061)
 > by [@rreichel3](https://github.com/rreichel3) into the IG's experimental repo,
 > per the May 28 2026 decision to pursue trust/privacy work as an extension
-> first. SEP-2061 remains the canonical discussion thread for the field
-> semantics.
+> first. SEP-2061 was [closed](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2061#issuecomment-4675049171)
+> on 2026-06-13 in favour of this extension as the home for the work; this draft
+> is now the canonical place to discuss the field semantics.
 
 ## Abstract
 
@@ -81,9 +82,9 @@ Carried under the extension-namespaced key on `ToolAnnotations`:
 | `outcome` | Real-world effect class: `benign` / `consequential` / `irreversible`. |
 | `requiresReview` | The tool author signals that a host SHOULD obtain explicit human confirmation before invocation. |
 
-> Exact enum value sets are inherited from SEP-2061 and are **not** re-litigated
-> here; this draft tracks that proposal. Where SEP-2061 evolves, this file
-> follows.
+> Exact enum value sets are inherited from SEP-2061 as the starting point and
+> are **not** re-litigated here. With SEP-2061 now closed, this draft is where
+> they evolve.
 
 ### `requiresReview` lives here, deliberately
 
@@ -130,3 +131,4 @@ would anchor the draft in a real ecosystem.
 | Date       | Change                                                              |
 | ---------- | ------------------------------------------------------------------- |
 | 2026-06-10 | Initial draft skeleton, carrying SEP-2061 into the experimental repo; absorbed `requiresReview` from the trust taxonomy. |
+| 2026-06-15 | SEP-2061 closed in favour of this extension; this draft is now the canonical home for the field semantics. |

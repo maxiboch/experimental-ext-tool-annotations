@@ -44,11 +44,12 @@ integrity (is this data trusted) as context accumulates across tool calls, and
 deny or prompt before a flow violates policy.
 
 A public MCP server is the natural emitter. [`github-mcp-server`](https://github.com/github/github-mcp-server)
-returns repository data whose confidentiality is determined by repo visibility
-and collaborator sets — exactly the public/private signal above — but does
-**not** emit IFC labels today. Closing that emitter gap is the concrete proof
-point for this profile: a host-side consumer of the label shape already exists,
-so the missing half is a server willing to emit it.
+returns repository data whose confidentiality follows from repository visibility
+and collaborator sets — the same public/private signal — but does **not** emit
+IFC labels today. Closing that emitter gap is the concrete proof point for this
+profile: a host-side consumer of the label shape already exists, so the missing
+half is a server willing to emit it, classifying each resource it returns (see
+[per-resource classification](#reference-implementation)).
 
 ## Specification
 
@@ -67,31 +68,61 @@ be inlined by deployments that accept the wire cost) has the shape:
 ```jsonc
 {
   "integrity": "trusted",            // "trusted" | "untrusted"  (FIDES §4.1 two-level lattice)
-  "confidentiality": "public"        // "public" | "private" | ["login1","login2", …]
+  "confidentiality": "public"        // "public" | "private"
 }
 ```
 
 | Field | Meaning |
 | :--- | :--- |
 | `integrity` | Two-level integrity lattice (`trusted` ⊑ `untrusted`): trusted data may flow to untrusted sinks, not vice versa. |
-| `confidentiality` | `"public"` = world-readable; `"private"` = an opaque marker the host resolves to a reader set (e.g. repo collaborators); an explicit `string[]` = pre-resolved reader logins. Fewer readers = more confidential = higher in the lattice. |
+| `confidentiality` | `"public"` = world-readable; `"private"` = an opaque marker meaning "restricted to some reader set". The concrete reader set is resolved host-side at policy-decision time (see [Reader-set resolution](#reader-set-resolution)). |
+
+> **Confidentiality is `public` / `private` only — never a reader list on the
+> wire.** Emitting concrete reader identities (e.g. logins) is out of scope: user
+> identity is not uniform across servers using different auth methods, the
+> identities are themselves access-restricted data, and a single resource can
+> have hundreds of readers. The opaque marker keeps the wire shape stable and the
+> sensitive resolution host-side.
 
 ### Label semantics
 
 - **Join on accumulation.** As a session ingests labeled results, the context
   label is the *join* of what it has seen: integrity degrades toward
-  `untrusted`, confidentiality narrows toward the smallest reader set.
+  `untrusted`, confidentiality narrows toward the smallest permitted reader set.
+  The **integrity join is total and computable from the wire values alone**
+  (`untrusted` dominates). The **confidentiality join is NOT computable from the
+  opaque wire markers alone** — see [Reader-set resolution](#reader-set-resolution).
 - **Policy check before egress.** Before a write/egress tool call, the host
   checks whether the current context label may flow to the call's target. When
   a label is absent, the host falls back to its default (trusted-action)
   policy rather than assuming the worst — labels are an *additive* signal.
-- **Confidentiality resolution.** `"private"` is intentionally opaque on the
-  wire; resolving it to a concrete reader set (e.g. via a collaborators lookup)
-  is a host concern, so servers need not enumerate audiences inline.
 
 > The normative integrity/confidentiality lattice definitions follow the FIDES
 > paper, §4.1 and §4.3. This draft references the model rather than restating
 > the proofs.
+
+### Reader-set resolution
+
+`"private"` is intentionally opaque on the wire. Two distinct `"private"`
+markers (e.g. file contents from two different private repositories) are **not
+equal**, and their confidentiality join is **not** the same `"private"` token:
+data derived from both may flow only to principals who can read *both* sources —
+the intersection of their reader sets. The opaque marker cannot express this
+intersection, so a host that needs to make a precise cross-source flow decision
+MUST resolve each `"private"` marker to a concrete reader set before joining.
+
+Resolution is a host-side concern, performed at policy-decision time:
+
+1. The host maps each contributing `"private"` label back to its source (e.g.
+   via the `evidenceRef.ref` locator, or its own record of which tool result
+   carried the label).
+2. The host queries the originating system for the current reader set (e.g. a
+   repository collaborators lookup) using its own credentials.
+3. The host computes the flow decision over the resolved sets (intersection for
+   a join of multiple private sources) and then discards them.
+
+Keeping resolution host-side is what lets the wire stay at `public` / `private`
+while still supporting precise multi-source decisions.
 
 ### Relationship to `trust-annotations`
 
@@ -106,17 +137,24 @@ the IFC label is the precise, host-checkable evidence behind them.
   applies a flow policy before egress operations already exists in practice.
   (Linked once a public reference is available.)
 - **Emitter (gap / proof point):** [`github-mcp-server`](https://github.com/github/github-mcp-server)
-  is the candidate — it already knows repo visibility and collaborator sets,
-  which are exactly the confidentiality inputs.
+  is the candidate — it already knows repository visibility and collaborator
+  sets, which are the confidentiality inputs. Repository visibility is only a
+  *default* hint, not the whole story: a public repository can serve
+  sub-resources that are **not** world-readable (draft security advisories,
+  draft releases, the collaborator roster itself, authenticated-user fields), so
+  a correct emitter MUST classify **per resource returned**, not per repository.
+  That makes the emitter a non-trivial proof point rather than a one-line
+  `repo.private` read.
 
 ## Open questions
 
 - Should the label be inlinable on `_meta.ifc` directly for low-friction
   adoption, or always behind `evidenceRef` for schema minimalism? (Lean:
   permit both; `evidenceRef` is canonical, inline is a convenience.)
-- How does GitHub Enterprise `internal` repo visibility map onto the
-  public/private/reader-set confidentiality model? (Audience is the whole org,
-  strictly broader than collaborators — likely falls back to default policy.)
+- How does GitHub Enterprise `internal` repository visibility map onto the
+  `public` / `private` confidentiality model? (Audience is the whole org,
+  strictly broader than collaborators — likely classified `private` and resolved
+  host-side, or falls back to default policy.)
 - Registry coordination with other attestation/evidence profiles
   (e.g. SEP-2787) so `evidenceRef.type` values don't collide.
 
@@ -125,3 +163,4 @@ the IFC label is the precise, host-checkable evidence behind them.
 | Date       | Change                                                       |
 | ---------- | ------------------------------------------------------------ |
 | 2026-06-10 | Initial draft skeleton. Reframed from a top-level `ifc` extension to a `trust-annotations` `evidenceRef` profile (`ifc.fides.v1`). |
+| 2026-06-15 | Confidentiality limited to `public` / `private` on the wire (dropped reader-list); added Reader-set resolution section; emitter classifies per resource, not per repository. (Review: @JoannaaKL.) |

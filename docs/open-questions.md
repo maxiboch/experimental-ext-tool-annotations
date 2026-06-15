@@ -33,8 +33,12 @@ Tracked here rather than in the spec drafts, so the drafts stay non-temporal.
 ## ifc-fides
 
 - Inline `_meta.ifc` for low-friction adoption vs. always behind `evidenceRef`.
-- GitHub Enterprise `internal` repo visibility → public/private/reader-set
-  mapping (audience is the whole org, broader than collaborators).
+- GitHub Enterprise `internal` repo visibility → `public`/`private` mapping
+  (audience is the whole org, broader than collaborators; resolved host-side).
+- Reader-set resolution is host-side by design — confidentiality join across two
+  `private` sources needs the intersection, which the opaque wire marker can't
+  express. Is the 3-step host resolution enough, or do some hosts need a
+  standard `evidenceRef.ref` shape to locate the originating system?
 
 ## Parked (SEP-1913 umbrella)
 

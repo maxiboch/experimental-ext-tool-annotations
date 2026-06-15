@@ -68,12 +68,13 @@ session-level propagation rules. See [open-questions.md](./open-questions.md).
 
 ### SEP-2061 — Action Security Metadata
 
-**Proposed:** becomes the [`action-metadata`](../specification/draft/action-metadata.mdx)
-extension. SEP-2061 is by [@rreichel3](https://github.com/rreichel3), who is
-also an IG co-facilitator and SEP-1913 co-author, so this is a fold-in, not a
-collision. Disposition mirrors 1913 option (A): keep the thread as the field-
-semantics discussion, add a pointer comment linking it to the
-`action-metadata` extension, refactor to Extensions Track when ready.
+**Disposition:** **closed 2026-06-13** in favour of the
+[`action-metadata`](../specification/draft/action-metadata.mdx) extension.
+SEP-2061 is by [@rreichel3](https://github.com/rreichel3), who is also an IG
+co-facilitator and SEP-1913 co-author, so this was a fold-in, not a collision.
+[@localden](https://github.com/localden) closed the PR (no active sponsor) after
+agreeing the extension is the right home; the extension now carries the field
+semantics forward, with SEP-2061 preserved as the origin and credit.
 
 ### SEP-1862 — Tool Resolution (pre-flight checks)
 
@@ -97,7 +98,7 @@ with it if it lands, but do not block on it.
 | SEP | Title | Proposed disposition | Extension home |
 | :-- | :-- | :-- | :-- |
 | 1913 | Trust & Sensitivity Annotations | Umbrella thread; schema moves to extensions | `trust-annotations` (+ `ifc-fides`) |
-| 2061 | Action Security Metadata | Fold into extension | `action-metadata` |
+| 2061 | Action Security Metadata | **Closed 2026-06-13**; lives as extension | `action-metadata` |
 | 1862 | Tool Resolution (pre-flight) | Stays core / Standards Track | — (composes, no dependency) |
 | 1984 | Comprehensive Tool Annotations | IG discussion item | — |
 | 2417 | Model Preferences for Tools | IG discussion item | — |

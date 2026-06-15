@@ -1,11 +1,12 @@
-# Intent comment (draft, pre-post review)
+# Intent comments (posted)
 
-This is the comment we plan to post on
-[SEP-1913](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913),
-with an abbreviated pointer version for
-[SEP-2061](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2061).
-Kept here so it can be reviewed and stays in sync with
-[sep-disposition.md](./sep-disposition.md).
+Both comments below have been **posted**. Kept here as the source of record,
+in sync with [sep-disposition.md](./sep-disposition.md).
+
+- **SEP-1913** umbrella comment — [posted 2026-06-10](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913#issuecomment-4675047154).
+- **SEP-2061** coordination note — [posted 2026-06-10](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2061#issuecomment-4675049171);
+  @localden then **closed SEP-2061 on 2026-06-13** in favour of the
+  `action-metadata` extension.
 
 ---
 
