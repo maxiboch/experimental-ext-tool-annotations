@@ -101,6 +101,12 @@ the SEP-1913 discussion):
 This single slot subsumes the previously separate `attestationChainRef` /
 `policyDecisionRef` ideas — both become `type` values.
 
+`canonicalization` is per-reference precisely so different evidence producers can
+be re-derived independently. `cbor/rfc8949` and `jcs/rfc8785` (JSON
+Canonicalization Scheme) are both valid envelope choices — neither is the default,
+and the `type`/`digest`/`canonicalization` triple is the minimum a client needs
+for local re-derivation regardless of which is used.
+
 ### Coarse vs. rich classification (DataClass)
 
 SEP-1913 carried a four-level data classification
@@ -114,7 +120,7 @@ is recovered as an `evidenceRef` profile:
   "type": "data-class.v1",
   // record resolves to e.g. { "class": "highly_confidential", "regulatory": ["hipaa"] }
   "digest": "sha256:…",
-  "canonicalization": "cbor/rfc8949"
+  "canonicalization": "jcs/rfc8785"   // a JSON-canonicalized record; CBOR is equally valid
 }
 ```
 
@@ -174,3 +180,4 @@ and `evidenceRef` is how that claim is made checkable.
 | Date       | Change                                                        |
 | ---------- | ------------------------------------------------------------- |
 | 2026-06-10 | Initial draft skeleton. Narrowed to `sensitive` + `untrusted` + `evidenceRef`; DataClass demoted to a profile; `requires_review` moved to `action-metadata`. |
+| 2026-06-16 | Show `jcs/rfc8785` alongside `cbor/rfc8949` so canonicalization reads as a per-reference envelope choice, not a default; note the `type`/`digest`/`canonicalization` triple as the local-re-derivation minimum. (Review: @Rul1an.) |

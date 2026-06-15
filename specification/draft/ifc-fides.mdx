@@ -86,12 +86,24 @@ be inlined by deployments that accept the wire cost) has the shape:
 
 ### Label semantics
 
+The load-bearing distinction is between the wire and the host: **wire markers are
+advisory hints; reader-set semantics are host-resolved.** The asymmetry between
+the two joins below follows from that one cut.
+
 - **Join on accumulation.** As a session ingests labeled results, the context
   label is the *join* of what it has seen: integrity degrades toward
   `untrusted`, confidentiality narrows toward the smallest permitted reader set.
-  The **integrity join is total and computable from the wire values alone**
-  (`untrusted` dominates). The **confidentiality join is NOT computable from the
-  opaque wire markers alone** — see [Reader-set resolution](#reader-set-resolution).
+  The two joins differ in *where* they can be computed, and the difference is
+  principled rather than incidental:
+  - **Integrity join is total and wire-computable.** The integrity lattice is
+    small and closed (`trusted ⊑ untrusted`), so `untrusted` dominates and the
+    join needs nothing beyond the wire values.
+  - **Confidentiality join is partial and host-resolved.** Reader sets are open
+    and host-knowledge-dependent. `public` is the one wire-computable case,
+    because its reader set is universal (`⊤`): `public ⊔ anything = public`.
+    `private ⊔ private`, by contrast, is the *intersection* of two reader sets
+    that the opaque markers don't carry, so it is **not** computable from the
+    wire — see [Reader-set resolution](#reader-set-resolution).
 - **Policy check before egress.** Before a write/egress tool call, the host
   checks whether the current context label may flow to the call's target. When
   a label is absent, the host falls back to its default (trusted-action)
@@ -103,13 +115,16 @@ be inlined by deployments that accept the wire cost) has the shape:
 
 ### Reader-set resolution
 
-`"private"` is intentionally opaque on the wire. Two distinct `"private"`
-markers (e.g. file contents from two different private repositories) are **not
-equal**, and their confidentiality join is **not** the same `"private"` token:
-data derived from both may flow only to principals who can read *both* sources —
-the intersection of their reader sets. The opaque marker cannot express this
-intersection, so a host that needs to make a precise cross-source flow decision
-MUST resolve each `"private"` marker to a concrete reader set before joining.
+`"private"` is intentionally opaque on the wire — and that opaqueness is a
+property of the security model, not a limitation of the spec. A reader set is not
+transmissible without policy context, so the wire shape correctly declines to
+carry it. Two distinct `"private"` markers (e.g. file contents from two different
+private repositories) are **not equal**, and their confidentiality join is **not**
+the same `"private"` token: data derived from both may flow only to principals who
+can read *both* sources — the intersection of their reader sets. The opaque marker
+cannot express this intersection, so a host that needs to make a precise
+cross-source flow decision MUST resolve each `"private"` marker to a concrete
+reader set before joining.
 
 Resolution is a host-side concern, performed at policy-decision time:
 
@@ -121,8 +136,19 @@ Resolution is a host-side concern, performed at policy-decision time:
 3. The host computes the flow decision over the resolved sets (intersection for
    a join of multiple private sources) and then discards them.
 
-Keeping resolution host-side is what lets the wire stay at `public` / `private`
-while still supporting precise multi-source decisions.
+**When resolution is unavailable** — the `ref` is absent, the label is
+digest-only, or the originating system is unreachable at decision time — the host
+MUST NOT treat two opaque labels as equal, and MUST NOT treat `"private"` as
+`"public"`. It denies, prompts, or applies its configured fail-closed policy. Two
+`"private"` labels are equal only once resolution proves their sources are; until
+a source is established, unknown or mixed provenance classifies as `"private"`,
+never defaulted to `"public"` from a repository-level shortcut.
+
+The resolved reader set is a decision-time read performed under the host's own
+credentials. It is not a durable grant: a host SHOULD NOT cache it as one or
+serialize it back into annotations or evidence unless a deployment explicitly opts
+in. This keeps the wire free of user identities while still letting the host make a
+precise decision when it holds source provenance plus its own credentials.
 
 ### Relationship to `trust-annotations`
 
@@ -164,3 +190,4 @@ the IFC label is the precise, host-checkable evidence behind them.
 | ---------- | ------------------------------------------------------------ |
 | 2026-06-10 | Initial draft skeleton. Reframed from a top-level `ifc` extension to a `trust-annotations` `evidenceRef` profile (`ifc.fides.v1`). |
 | 2026-06-15 | Confidentiality limited to `public` / `private` on the wire (dropped reader-list); added Reader-set resolution section; emitter classifies per resource, not per repository. (Review: @JoannaaKL.) |
+| 2026-06-16 | Lead the semantics with the wire-hint / host-resolved split; state the integrity-total vs confidentiality-partial asymmetry as principled (`public` = `⊤` is wire-computable, `private ⊔ private` is not); add fail-closed handling when resolution is unavailable and a no-durable-grant rule for resolved sets. (Review: @Rul1an.) |
