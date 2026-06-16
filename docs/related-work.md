@@ -15,9 +15,21 @@ annotation work. Several were surfaced in IG meetings (notably 2026-05-28).
 ## Research
 
 - **FIDES** — *Information-flow control for LLM agents.* [arXiv:2505.23643](https://arxiv.org/abs/2505.23643). Basis for the `ifc.fides.v1` scheme in [`schemes/`](../schemes/).
-- **Design Patterns for Securing LLM Agents** — IBM/Google/Microsoft. [arXiv:2506.08837](https://arxiv.org/abs/2506.08837). Plan-Then-Execute, Dual LLM, Map-Reduce, etc.
+- **Permissive Information-Flow Analysis for LLMs** — relaxes IFC join so a label propagates only when an input actually influences an output. [arXiv:2410.03055](https://arxiv.org/abs/2410.03055). Candidate `evidenceRef` scheme (per-result label), like FIDES.
+- **AirGapAgent** — contextual-integrity minimisation: restrict per-task data to what the context warrants. [arXiv:2405.05175](https://arxiv.org/abs/2405.05175). Candidate scheme: emits a contextual-integrity classification per result.
+- **CaMeL — Defeating Prompt Injections by Design** — capability-based control/data-flow extraction. [arXiv:2503.18813](https://arxiv.org/abs/2503.18813). A **host architecture**, not a data-label scheme (see note below); a capability token it issues could be referenced via `evidenceRef`, but the architecture itself is not a scheme.
+- **Design Patterns for Securing LLM Agents** — IBM/Google/Microsoft. [arXiv:2506.08837](https://arxiv.org/abs/2506.08837). Plan-Then-Execute, Dual LLM, Map-Reduce, etc. Also **host architectures**, not schemes.
 - **Trail of Bits** — prompt-injection via hidden content in GitHub issues. [blog](https://blog.trailofbits.com/2025/08/06/prompt-injection-engineering-for-attackers-exploiting-github-copilot/).
 - **OpenAI Auto Review** — https://alignment.openai.com/auto-review/ (shared in IG chat).
+
+### Schemes vs. host architectures
+
+The `evidenceRef` slot carries **data labels** — a per-result record a server
+can attach (FIDES, Permissive IFC, AirGapAgent, data-class, attestation
+envelopes). It does **not** carry **host architectures** — control-flow designs
+the *client/host* runs (CaMeL, the Design-Patterns catalogue, Dual-LLM). These
+are complementary: an architecture decides what to do with a label, the label is
+what a scheme produces. Only the former belong in [`schemes/`](../schemes/).
 
 ## Implementations & tooling
 

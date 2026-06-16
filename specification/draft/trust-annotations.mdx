@@ -137,6 +137,26 @@ are present, the content-block annotation refines the result-level one for that
 block; it MUST NOT *weaken* a result-level claim (union semantics — once
 `true`, stays `true`).
 
+### Relationship to existing `*Hint` annotations
+
+MCP tool definitions already carry an `openWorldHint` (alongside `readOnlyHint` /
+`destructiveHint` / `idempotentHint`). `untrusted` is deliberately **not** a
+synonym for `openWorldHint`:
+
+- `openWorldHint` is a property of the **tool definition** — "this tool reaches
+  an open, attacker-influenceable world" (e.g. a web fetch). It is known at
+  registration time and does not vary per call.
+- `untrusted` is a property of a **specific result** — "*this* returned data
+  originated from an open-world / untrusted source." A tool whose `openWorldHint`
+  is `true` may still return trusted data on a given call, and a tool whose
+  `openWorldHint` is `false` can surface untrusted data it read from storage.
+
+The original SEP-1913 proposal reused `openWorldHint` for the result-level
+"untrusted source" signal and then drew exactly this distinction
+([issue #711](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/711)).
+Whether the two should share a name or vocabulary is an
+[open question](../../docs/open-questions.md).
+
 ### Lifecycle and `list_changed`
 
 Trust annotations defined here are **response-level**: they describe a specific

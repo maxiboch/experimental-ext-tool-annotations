@@ -117,3 +117,31 @@ that extension's `evidenceRef` slot.
 **Rationale.** Separate PRs let each piece be reviewed and graduate on its own
 clock. FIDES stacks on `trust-annotations` because a scheme has no meaning
 without the slot it fills.
+
+## 2026-06-17 — Schemes carry data labels; host architectures do not
+
+**Decision.** `schemes/` holds **data-labelling** approaches a server attaches to
+a result (FIDES, Permissive IFC, AirGapAgent, `data-class`, attestation
+envelopes). **Host architectures** — control-flow designs the client/host runs
+(CaMeL, the "Design Patterns for Securing LLM Agents" catalogue, Dual-LLM) — are
+prior art in [`related-work.md`](./related-work.md), not candidate schemes.
+
+**Rationale.** A scheme produces a label; an architecture decides what to do with
+one. Conflating them would invite a `schemes/camel.md` that has no per-result
+payload to define. A capability token such an architecture issues can still be
+*referenced* through `evidenceRef`, but the architecture itself is not a scheme.
+
+## 2026-06-17 — Early SEP-1913 feedback recorded as cited open questions
+
+**Decision.** The substantive concerns from the original issue (#711) and SEP
+(#1913) review — the set-theoretic critique of linear sensitivity, org-defined
+vocabularies, the class+regulatory pairing, taint persistence across storage,
+per-block byte ranges, sequence-shape, and the false-security risk — are
+captured with reviewer attributions in [`open-questions.md`](./open-questions.md)
+rather than silently dropped by the narrower cut.
+
+**Rationale.** The narrow first cut (`sensitive: boolean`) deliberately omits a
+lot of debated design. Recording *why*, with links to the people who raised each
+point, keeps the history visible and gives each parked item a home to graduate
+from (a scheme, an `action-metadata` field, or a future extension) instead of
+being re-litigated from scratch.
