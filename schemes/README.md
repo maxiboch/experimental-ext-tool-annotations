@@ -17,17 +17,19 @@ here rather than as a top-level extension.
 | Scheme | `evidenceRef.type` | Status | Source |
 | :--- | :--- | :--- | :--- |
 | [FIDES information-flow control](./ifc-fides.md) | `ifc.fides.v1` | Draft skeleton | [arXiv:2505.23643](https://arxiv.org/abs/2505.23643) |
+| [Data classification](./data-class.md) | `data-class.v1` | Draft skeleton | SEP-1913 taxonomy (`class` + regulatory scope) |
 
 ## Candidate schemes (not yet drafted)
 
 The open `type` slot is designed to carry the range of models raised in the
 [SEP-1913](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913)
-review and the surrounding literature. Each is a candidate for its own scheme doc:
+review and the surrounding literature. Each is a candidate for its own scheme doc.
+A scheme produces a **per-result data label** a server attaches:
 
 | Approach | Likely `type` | Source |
 | :--- | :--- | :--- |
-| Coarse data classification (level + regulatory scope) | `data-class.v1` | SEP-1913 taxonomy (e.g. `confidential:hipaa` shape) |
-| Design-pattern controls (Plan-Then-Execute, Dual LLM, Map-Reduce) | — | [arXiv:2506.08837](https://arxiv.org/abs/2506.08837) |
+| Permissive information-flow labels (influence-based propagation) | `ifc.permissive.v1` | [arXiv:2410.03055](https://arxiv.org/abs/2410.03055) |
+| Contextual-integrity classification (per-task minimisation) | `ci.airgap.v1` | [arXiv:2405.05175](https://arxiv.org/abs/2405.05175) |
 | ShardGuard | — | cited in SEP-1913 |
 | Capability-token constraints (SINT) | — | SEP-1913 review thread |
 | Caller/tool cosigning | — | SEP-1913 review thread |
@@ -36,6 +38,18 @@ review and the surrounding literature. Each is a candidate for its own scheme do
 
 These are leads, not commitments. A candidate becomes a scheme when someone
 drafts it to the bar below; until then the slot simply stays open for it.
+
+## Not schemes: host architectures
+
+Some models raised in the same discussion are **host/client control-flow
+architectures**, not data labels — they decide what to *do* with information,
+they don't produce a per-result record a server attaches. They are prior art (see
+[`related-work.md`](../docs/related-work.md)), not entries here:
+
+| Approach | Why it isn't a scheme | Source |
+| :--- | :--- | :--- |
+| CaMeL (capability-based control/data-flow) | A host runtime; a capability token it issues *could* be referenced via `evidenceRef`, but the architecture isn't a label | [arXiv:2503.18813](https://arxiv.org/abs/2503.18813) |
+| Design-pattern controls (Plan-Then-Execute, Dual LLM, Map-Reduce) | Client-side execution patterns, nothing on the wire | [arXiv:2506.08837](https://arxiv.org/abs/2506.08837) |
 
 ## Bar for adding a scheme
 
