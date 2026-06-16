@@ -40,7 +40,10 @@ broadly-applicable signals cover the majority of client-actionable cases:
   Drives prompt-injection defenses.
 
 Anything richer than these two booleans is deliberately **not** on the wire; it
-hangs off `evidenceRef` (see below).
+hangs off `evidenceRef` (see below). These two signals are a
+**lowest-common-denominator floor**, not a ceiling: servers are encouraged to
+*also* attach a richer scheme via `evidenceRef` — see
+[Coarse vs. rich](#coarse-vs-rich-classification-dataclass).
 
 ## Specification
 
@@ -113,7 +116,7 @@ SEP-1913 carried a four-level data classification
 (`public` / `personal` / `confidential` / `highly_confidential`) plus a
 regulatory scope (e.g. `confidential:hipaa`). **This extension deliberately
 keeps only the coarse `sensitive` boolean on the wire.** Richer classification
-is recovered as an `evidenceRef` profile:
+is recovered as an `evidenceRef` scheme:
 
 ```jsonc
 "evidenceRef": {
@@ -124,9 +127,19 @@ is recovered as an `evidenceRef` profile:
 }
 ```
 
-This is an explicit scope decision: the binary lives on the wire for universal
-client actionability; the taxonomy lives behind a profile so it can evolve
-without a breaking schema change.
+This is an explicit scope decision. The boolean is the **lowest-common-
+denominator signal**: a universal, always-actionable floor that lets any client
+apply a basic egress/consent policy that is *better than nothing*, even against a
+server it knows little about. It can be thought of as the basic, general scheme
+that every participant understands. Richer schemes are strictly more capable but
+are not universally implemented, so they cannot be the floor.
+
+Servers SHOULD therefore emit **both** when they can: the coarse `sensitive`
+boolean for universal actionability, **and** a richer `evidenceRef` scheme (e.g.
+`data-class.v1`, `ifc.fides.v1`) for hosts that implement it. The two are
+layered, not alternatives — a client that understands the scheme uses it; one
+that does not still has the boolean. `sensitive` MUST NOT be omitted merely
+because a richer scheme is present.
 
 ### Attachment point
 
@@ -189,8 +202,11 @@ and `evidenceRef` is how that claim is made checkable.
 
 ## Open questions
 
-- Is `sensitive` the right single coarse signal, or do we need `sensitive` +
-  the `data-class.v1` profile from day one?
+- `sensitive` is settled as the lowest-common-denominator floor; servers are
+  encouraged to emit it **and** a richer scheme. Residual: is the
+  [`data-class.v1` scheme](../../schemes/data-class.md) enough, or do some
+  regulated flows need the classification *on the wire*? See
+  [docs/open-questions.md](../../docs/open-questions.md).
 - Exact required-vs-recommended split on `evidenceRef` fields.
 - Whether content-block-level annotation needs a worked multi-result example
   before the draft is implementable.
@@ -201,3 +217,4 @@ and `evidenceRef` is how that claim is made checkable.
 | ---------- | ------------------------------------------------------------- |
 | 2026-06-10 | Initial draft skeleton. Narrowed to `sensitive` + `untrusted` + `evidenceRef`; DataClass demoted to a profile; `requires_review` moved to `action-metadata`. |
 | 2026-06-16 | Show `jcs/rfc8785` alongside `cbor/rfc8949` so canonicalization reads as a per-reference envelope choice, not a default; note the `type`/`digest`/`canonicalization` triple as the local-re-derivation minimum. (Review: @Rul1an.) |
+| 2026-06-16 | Add `untrusted` vs `openWorldHint` relationship subsection; frame `sensitive` as the lowest-common-denominator floor and recommend servers emit both the boolean and a richer `evidenceRef` scheme. |

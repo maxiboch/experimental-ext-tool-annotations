@@ -118,7 +118,7 @@ that extension's `evidenceRef` slot.
 clock. FIDES stacks on `trust-annotations` because a scheme has no meaning
 without the slot it fills.
 
-## 2026-06-17 — Schemes carry data labels; host architectures do not
+## 2026-06-16 — Schemes carry data labels; host architectures do not
 
 **Decision.** `schemes/` holds **data-labelling** approaches a server attaches to
 a result (FIDES, Permissive IFC, AirGapAgent, `data-class`, attestation
@@ -131,7 +131,7 @@ one. Conflating them would invite a `schemes/camel.md` that has no per-result
 payload to define. A capability token such an architecture issues can still be
 *referenced* through `evidenceRef`, but the architecture itself is not a scheme.
 
-## 2026-06-17 — Early SEP-1913 feedback recorded as cited open questions
+## 2026-06-16 — Early SEP-1913 feedback recorded as cited open questions
 
 **Decision.** The substantive concerns from the original issue (#711) and SEP
 (#1913) review — the set-theoretic critique of linear sensitivity, org-defined
@@ -145,3 +145,22 @@ lot of debated design. Recording *why*, with links to the people who raised each
 point, keeps the history visible and gives each parked item a home to graduate
 from (a scheme, an `action-metadata` field, or a future extension) instead of
 being re-litigated from scratch.
+
+## 2026-06-16 — `sensitive` is a lowest-common-denominator floor; emit both
+
+**Decision.** The coarse `sensitive` boolean is intentionally a
+lowest-common-denominator signal — a universal, always-actionable floor that
+supports a basic "better than nothing" egress/consent policy even against a
+barely-known server. It is the basic, general scheme every participant
+understands, **not** a competitor to richer schemes. Servers SHOULD emit **both**
+the boolean and a richer `evidenceRef` scheme (e.g. `data-class.v1`,
+`ifc.fides.v1`) where they can; `sensitive` MUST NOT be dropped merely because a
+scheme is present.
+
+**Rationale.** Clarifies the original purpose of the boolean (raised by Sam): the
+point of keeping it on the wire was never to *replace* richer classification but
+to guarantee a floor any client can act on. Richer schemes are strictly more
+capable but are not universally implemented, so they cannot be the floor —
+layering the two gives universal actionability without capping what advanced
+hosts can do. This also answers the "boolean vs. richer taxonomy" tension from
+SEP-1913 review: it is not either/or, it is both, at different layers.

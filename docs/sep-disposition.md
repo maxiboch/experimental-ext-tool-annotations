@@ -105,7 +105,7 @@ with it if it lands, but do not block on it.
 | 1862 | Tool Resolution (pre-flight) | Stays core / Standards Track | — (composes, no dependency) |
 | 1984 | Comprehensive Tool Annotations | IG discussion item | — |
 | 2417 | Model Preferences for Tools | IG discussion item | — |
-| 2787 | Tool Call Attestation | Candidate `evidenceRef` profile | (future) |
+| 2787 | Tool Call Attestation | Candidate `evidenceRef` scheme | (future) |
 
 ## Intent comment
 

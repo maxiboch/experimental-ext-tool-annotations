@@ -10,27 +10,30 @@ Tracked here rather than in the spec drafts, so the drafts stay non-temporal.
 - **Cross-domain integrity verification** — is asymmetric crypto for domain
   identity in scope for a future extension, or out of scope entirely? CLI tools
   remain a persistent gap for enforcing these constraints.
-- **`evidenceRef.type` registry** — who curates the list of well-known profile
+- **`evidenceRef.type` registry** — who curates the list of well-known scheme
   types, and how do we coordinate with attestation SEPs (e.g. SEP-2787) so
   values don't collide?
 
 ## trust-annotations
 
-- **Shape of the sensitivity signal.** Is `sensitive: boolean` the right single
-  coarse signal, or does the narrow cut overcorrect? The SEP-1913 thread rejected
-  a linear `sensitiveHint: low|medium|high` because sensitivity is set-theoretic,
-  not a scale ([@JustinCappos](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/711#issuecomment-2967516811):
-  medical results to a mail MCP *and* a card number to a payment MCP, but neither
-  crossed). Reviewers then pushed for org-defined vocabularies
+- **Sensitivity beyond the floor.** The `sensitive` boolean is settled as the
+  **lowest-common-denominator floor** — a basic, general signal every client can
+  act on, "better than nothing," with servers encouraged to *also* emit a richer
+  scheme (see the [decision log](./decisions.md) and the "emit both" guidance in
+  the spec). The residual open question is narrower: is "coarse boolean + richer
+  `evidenceRef` scheme" sufficient for regulated flows, or do some hosts need the
+  classification expressible *on the wire* without a scheme? Current lean: **no
+  wire escape hatch** — keep the wire floor un-rottable and push the taxonomy
+  into [`data-class.v1`](../schemes/data-class.md). Background on why a single
+  scalar/enum was rejected: sensitivity is set-theoretic not linear
+  ([@JustinCappos](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/711#issuecomment-2967516811)),
+  reviewers wanted org-defined vocabularies
   ([@olaservo](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/711#issuecomment-2968743154),
   [@Mossaka](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/711#issuecomment-2971788308))
-  and a class+regulatory pairing such as `confidential:hipaa`
-  ([@krubenok](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913#discussion_r3103485194)).
-  Against that, [@localden](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913#issuecomment-4037623595)
-  warned a baked-in taxonomy is hard to remove. Open: keep the boolean and let
-  the [`data-class.v1` scheme](../schemes/data-class.md) carry the taxonomy, or
-  also expose a structured escape hatch on the wire so regulated flows are
-  expressible without a scheme?
+  and a class+regulatory pairing
+  ([@krubenok](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913#discussion_r3103485194)),
+  and a baked-in taxonomy is hard to remove
+  ([@localden](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913#issuecomment-4037623595)).
 - **Enforcement vs. advisory.** A self-declared `sensitive: true` from a
   poorly-configured or malicious server could create a false sense of security
   ([@localden](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913#issuecomment-4037623595)).
