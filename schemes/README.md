@@ -4,7 +4,10 @@ A **scheme** is a concrete data-labelling or tool-annotation approach that fills
 the [`trust-annotations`](../specification/draft/trust-annotations.mdx)
 `evidenceRef` slot under an `evidenceRef.type` value. The extension defines a
 small, stable wire vocabulary and an open `type` pointer; a scheme defines the
-richer, out-of-band record that pointer resolves to.
+richer, out-of-band record that pointer resolves to. The wire vocabulary (notably
+`sensitive`) is a lowest-common-denominator floor every client can act on;
+schemes refine it for hosts that implement them, and a server that can classify
+more precisely is encouraged to emit **both** the floor and a scheme record.
 
 Schemes are **not** extensions and **not** siblings of the extensions. They are
 interchangeable: a deployment can adopt one, several, or none, and can swap them

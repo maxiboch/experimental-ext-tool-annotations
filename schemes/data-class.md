@@ -94,7 +94,9 @@ The record is a JSON object. Shapes below are **open questions**, not settled:
 A client that does not implement `data-class.v1` ignores the record and relies on
 the `trust-annotations` `sensitive` boolean, which remains meaningful on its own.
 The scheme only ever *refines* the boolean; it never contradicts it (a
-`data-class.v1` record only appears where `sensitive` is already `true`).
+`data-class.v1` record only appears where `sensitive` is already `true`). Because
+the boolean is the lowest-common-denominator floor, a producer of this scheme
+SHOULD emit **both** the boolean and the record, never the record alone.
 
 ## Producer / consumer
 
@@ -119,5 +121,5 @@ The scheme only ever *refines* the boolean; it never contradicts it (a
 
 ## Changelog
 
-- **2026-06-17** — Initial skeleton. Payload shapes are candidates pending the
+- **2026-06-16** — Initial skeleton. Payload shapes are candidates pending the
   open questions above.
