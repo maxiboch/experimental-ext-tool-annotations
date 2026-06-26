@@ -1,0 +1,220 @@
+---
+title: Trust Annotations
+---
+
+<Info>**Protocol Revision**: draft</Info>
+
+**Extension identifier:** `io.modelcontextprotocol/trust-annotations`
+
+> ⚠️ **Experimental draft skeleton.** This document captures the agreed shape
+> and the open questions. Normative text is intentionally thin pending
+> reference-implementation validation. Substantive discussion happens on PRs
+> against this file and on [SEP-1913](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1913).
+
+## Abstract
+
+This extension defines a small, stable, scheme-agnostic vocabulary for
+classifying **data in transit** through MCP tool results, plus an optional
+`evidenceRef` pointer that lets a deployment attach richer, out-of-band
+evidence without growing the on-wire schema. It is the primary
+data-classification extension in the Tool Annotations IG's trust work; other
+extensions (information-flow control, action metadata) compose with it rather
+than duplicating it.
+
+The design follows the [@localden](https://github.com/localden) review steer on
+SEP-1913 — take a *narrow first cut* of the taxonomy and avoid hard-to-remove
+schema — while preserving the layered "small annotation on the wire, rich
+evidence out-of-band" consensus that emerged in the SEP-1913 thread.
+
+## Motivation
+
+Data crosses tool boundaries today with no standardized markers for whether it
+is sensitive or whether it originated from an untrusted source. Clients and
+hosts are left to infer this from tool names or model behavior. Two coarse,
+broadly-applicable signals cover the majority of client-actionable cases:
+
+- **`sensitive`** — the content should be treated as confidential (PII,
+  credentials, proprietary data). Drives consent prompts and egress policy.
+- **`untrusted`** — the content originated from an open-world / attacker-
+  influenceable source (web pages, third-party email, user-generated content).
+  Drives prompt-injection defenses.
+
+Anything richer than these two booleans is deliberately **not** on the wire; it
+hangs off `evidenceRef` (see below). These two signals are a
+**lowest-common-denominator floor**, not a ceiling: servers are encouraged to
+*also* attach a richer scheme via `evidenceRef` — see
+[Coarse vs. rich](#coarse-vs-rich-classification-dataclass).
+
+## Specification
+
+### Dependencies
+
+This extension depends only on the base MCP `_meta` mechanism. It does not
+require Tool Resolution ([SEP-1862](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1862)),
+though it composes with it.
+
+### Annotation shape
+
+Trust annotations are carried under the extension-namespaced `_meta` key on a
+`CallToolResult` (and MAY appear on an individual `ContentBlock` — see
+[Attachment point](#attachment-point)).
+
+```jsonc
+{
+  "_meta": {
+    "io.modelcontextprotocol/trust-annotations": {
+      "sensitive": true,            // optional boolean
+      "untrusted": true,            // optional boolean
+      "evidenceRef": {              // optional pointer, see below
+        "type": "data-class.v1",
+        "digest": "sha256:…",
+        "canonicalization": "cbor/rfc8949",
+        "schema": "https://…/data-class.v1.json",
+        "ref": "audit://…"          // optional locator
+      }
+    }
+  }
+}
+```
+
+Both booleans are optional and default to `false`/absent. Absence MUST be
+treated as "no claim made," never as "asserted false."
+
+### The `evidenceRef` slot
+
+`evidenceRef` is the extension point that keeps the wire schema small while
+letting deployments attach arbitrarily rich evidence. Its shape (adapted from
+the SEP-1913 discussion):
+
+| Field | Required | Meaning |
+| :--- | :--- | :--- |
+| `type` | yes | **Open string** naming the class of the referenced record. NOT an enum. Examples: `"data-class.v1"`, `"ifc.fides.v1"`, `"sequence"`, `"policy-decision"`. |
+| `digest` | yes | Hash of the referenced record, so a client holding the data can re-derive it. |
+| `canonicalization` | yes | How the digest was computed (e.g. `"cbor/rfc8949"`), so the client can re-hash independently. |
+| `schema` | recommended | Identifier/version of the record `ref` resolves to. |
+| `ref` | optional | Locator into the deployment's audit/evidence stream. |
+
+> **Normative intent:** `type` MUST remain an open string. Narrowing it to a
+> closed enum would foreclose the capability-token, cosigning, and
+> sequence-shape models raised in SEP-1913 review. A non-binding **registry**
+> of well-known `type` values is maintained in this repo; unknown `type` values
+> MUST be safely ignorable by a client that does not understand them (the
+> `digest`/`canonicalization` pair is still a usable, bounded signal).
+
+This single slot subsumes the previously separate `attestationChainRef` /
+`policyDecisionRef` ideas — both become `type` values.
+
+`canonicalization` is per-reference precisely so different evidence producers can
+be re-derived independently. `cbor/rfc8949` and `jcs/rfc8785` (JSON
+Canonicalization Scheme) are both valid envelope choices — neither is the default,
+and the `type`/`digest`/`canonicalization` triple is the minimum a client needs
+for local re-derivation regardless of which is used.
+
+### Coarse vs. rich classification (DataClass)
+
+SEP-1913 carried a four-level data classification
+(`public` / `personal` / `confidential` / `highly_confidential`) plus a
+regulatory scope (e.g. `confidential:hipaa`). **This extension deliberately
+keeps only the coarse `sensitive` boolean on the wire.** Richer classification
+is recovered as an `evidenceRef` scheme:
+
+```jsonc
+"evidenceRef": {
+  "type": "data-class.v1",
+  // record resolves to e.g. { "class": "highly_confidential", "regulatory": ["hipaa"] }
+  "digest": "sha256:…",
+  "canonicalization": "jcs/rfc8785"   // a JSON-canonicalized record; CBOR is equally valid
+}
+```
+
+This is an explicit scope decision. The boolean is the **lowest-common-
+denominator signal**: a universal, always-actionable floor that lets any client
+apply a basic egress/consent policy that is *better than nothing*, even against a
+server it knows little about. It can be thought of as the basic, general scheme
+that every participant understands. Richer schemes are strictly more capable but
+are not universally implemented, so they cannot be the floor.
+
+Servers SHOULD therefore emit **both** when they can: the coarse `sensitive`
+boolean for universal actionability, **and** a richer `evidenceRef` scheme (e.g.
+`data-class.v1`, `ifc.fides.v1`) for hosts that implement it. The two are
+layered, not alternatives — a client that understands the scheme uses it; one
+that does not still has the boolean. `sensitive` MUST NOT be omitted merely
+because a richer scheme is present.
+
+### Attachment point
+
+Annotations attach at the **`CallToolResult` level by default.** A server MAY
+additionally annotate an individual `ContentBlock` when it has reason to
+localize the signal (e.g. one search result among many is untrusted). When both
+are present, the content-block annotation refines the result-level one for that
+block; it MUST NOT *weaken* a result-level claim (union semantics — once
+`true`, stays `true`).
+
+### Relationship to existing `*Hint` annotations
+
+MCP tool definitions already carry an `openWorldHint` (alongside `readOnlyHint` /
+`destructiveHint` / `idempotentHint`). `untrusted` is deliberately **not** a
+synonym for `openWorldHint`:
+
+- `openWorldHint` is a property of the **tool definition** — "this tool reaches
+  an open, attacker-influenceable world" (e.g. a web fetch). It is known at
+  registration time and does not vary per call.
+- `untrusted` is a property of a **specific result** — "*this* returned data
+  originated from an open-world / untrusted source." A tool whose `openWorldHint`
+  is `true` may still return trusted data on a given call, and a tool whose
+  `openWorldHint` is `false` can surface untrusted data it read from storage.
+
+The original SEP-1913 proposal reused `openWorldHint` for the result-level
+"untrusted source" signal and then drew exactly this distinction
+([issue #711](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/711)).
+Whether the two should share a name or vocabulary is an
+[open question](../../docs/open-questions.md).
+
+### Lifecycle and `list_changed`
+
+Trust annotations defined here are **response-level**: they describe a specific
+tool result and are not part of the tool *definition*. They therefore do **not**
+participate in `tools/list_changed`. (If a future revision attaches trust
+vocabulary to tool definitions, that surface would follow `list_changed`; this
+draft does not.)
+
+### Propagation
+
+This extension does **not** specify session-level escalation/propagation rules.
+Those remain an [open question](../../docs/open-questions.md) on the SEP-1913
+umbrella. A host MAY implement propagation locally; this extension only
+standardizes the per-result annotation.
+
+## Reference implementation
+
+[`kapil8811/mcp-trust-annotations`](https://github.com/kapil8811/mcp-trust-annotations)
+— a Python SDK with a `@trust_annotated` decorator, `to_wire`/`from_wire`
+round-tripping, a policy engine (audit/warn/enforce), a healthcare-scenario
+demo, and an LLM-based usability study (138 tests). The SDK predates this
+narrowed shape and is being aligned to the two-boolean + `evidenceRef` model.
+
+## Trust model
+
+Enforcement does not rest on developer honesty. See
+[docs/trust-model.md](../../docs/trust-model.md): registries and marketplaces
+verifying annotations are the enforcement layer; the annotation is a *claim*,
+and `evidenceRef` is how that claim is made checkable.
+
+## Open questions
+
+- `sensitive` is settled as the lowest-common-denominator floor; servers are
+  encouraged to emit it **and** a richer scheme. Residual: is the
+  [`data-class.v1` scheme](../../schemes/data-class.md) enough, or do some
+  regulated flows need the classification *on the wire*? See
+  [docs/open-questions.md](../../docs/open-questions.md).
+- Exact required-vs-recommended split on `evidenceRef` fields.
+- Whether content-block-level annotation needs a worked multi-result example
+  before the draft is implementable.
+
+## Changelog
+
+| Date       | Change                                                        |
+| ---------- | ------------------------------------------------------------- |
+| 2026-06-10 | Initial draft skeleton. Narrowed to `sensitive` + `untrusted` + `evidenceRef`; DataClass demoted to a profile; `requires_review` moved to `action-metadata`. |
+| 2026-06-16 | Show `jcs/rfc8785` alongside `cbor/rfc8949` so canonicalization reads as a per-reference envelope choice, not a default; note the `type`/`digest`/`canonicalization` triple as the local-re-derivation minimum. (Review: @Rul1an.) |
+| 2026-06-16 | Add `untrusted` vs `openWorldHint` relationship subsection; frame `sensitive` as the lowest-common-denominator floor and recommend servers emit both the boolean and a richer `evidenceRef` scheme. |
