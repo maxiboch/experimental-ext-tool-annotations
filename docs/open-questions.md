@@ -70,6 +70,19 @@ record before any rename lands:
 - Open strings vs. closed enums for `destination` / `source` / `sensitivity`.
 - Does `requiresReview` need a machine-readable *reason* for good client UX?
 
+## display-templates
+
+- **Branch-key spelling.** Should the branch-scoped key inside `oneOf`/`anyOf`
+  subschemas be spelled `x-mcp-display-template`, following the
+  [SEP-2356](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2356)
+  precedent for schema-embedded extension keywords, rather than the reverse-DNS
+  spelling in the draft?
+- **Result-side attachment point.** Per-content-block only, or also permitted at
+  the `CallToolResult` level (one string per result) for servers whose results
+  are multi-block but whose human summary is singular?
+- **Inner key naming.** `template` / `text` versus more explicit spellings
+  (`callTemplate` / `displayText`).
+
 ## ifc-fides (scheme)
 
 - Inline `_meta.ifc` for low-friction adoption vs. always behind `evidenceRef`.

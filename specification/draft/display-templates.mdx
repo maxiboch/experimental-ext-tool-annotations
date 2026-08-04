@@ -108,6 +108,10 @@ Templating is the wrong tool for the result side, because by the time a server i
 
 This generalizes cleanly across arbitrarily different response shapes from the same tool, since the server, not a static declaration, decides what to say each time. It extends the same dual-audience pattern already discussed for tabular output in #930, generalized beyond tables: `text`/`structuredContent` stays optimized for the model, the display text is optimized for the human watching.
 
+### Lifecycle and `list_changed`
+
+The two fields have different lifecycles. The call-side `template` is part of the tool *definition* — it rides on `Tool` `_meta` (and, branch-scoped, inside `inputSchema` subschemas), so it follows the definition's lifecycle and **does** participate in `tools/list_changed`: a client that re-fetches the tool list on `list_changed` picks up template changes with no additional mechanism, and MUST NOT cache templates across a `list_changed` notification. The result-side `text` is **response-level** — rendered fresh for each specific result, never part of the definition — and therefore does not participate in `list_changed`, mirroring the response-level fields of `io.modelcontextprotocol/trust-annotations`.
+
 ### Non-goals
 
 - This is not MCP Apps by a lighter route, and it is not a UI-directive system (no buttons, no widgets, no layout). MCP Apps addresses servers that ship an actual interactive surface (HTML) for a client to host; this extension has no surface at all. It is a hint for the one-line string a client already prints for every tool call and result, including in TUIs and agentic CLIs that will never embed an app, which is why it belongs with tool annotations rather than with Apps. Application-specific UI directives (as referenced in #930) are likewise a separate, larger surface; this extension deliberately stays within "one string, one line, plain substitution."
