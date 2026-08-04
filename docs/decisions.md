@@ -164,3 +164,10 @@ capable but are not universally implemented, so they cannot be the floor —
 layering the two gives universal actionability without capping what advanced
 hosts can do. This also answers the "boolean vs. richer taxonomy" tension from
 SEP-1913 review: it is not either/or, it is both, at different layers.
+
+- 2026-08-04 — display-templates: wire carrier is the extension-namespaced
+  `_meta` key (`io.modelcontextprotocol/display-templates`), not new
+  `ToolAnnotations`/`Annotations` fields: matches the trust-annotations
+  precedent in this repo, follows SEP-2133's independent-graduation path,
+  and is the only carrier that survives the Python SDK 2.x strict models,
+  which strip unknown annotation keys at both serialization ends.
